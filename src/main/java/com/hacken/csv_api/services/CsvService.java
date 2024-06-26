@@ -1,5 +1,6 @@
 package com.hacken.csv_api.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hacken.csv_api.entities.Csv;
 import com.hacken.csv_api.repositories.CsvRepository;
@@ -14,7 +15,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CsvService {
@@ -27,6 +30,30 @@ public class CsvService {
     public CsvService(CsvRepository csvRepository, ObjectMapper objectMapper) {
         this.csvRepository = csvRepository;
         this.objectMapper = objectMapper;
+    }
+
+    public List<Map<String, String>> search(String key, String value) {
+        List<Csv> csvs = csvRepository.findAll();
+        return csvs.stream()
+                .filter(csv -> {
+                    try {
+                        Map<String, String> dataMap = objectMapper.readValue(
+                                csv.getData(), new TypeReference<>() {
+                                });
+                        return value.equals(dataMap.get(key));
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        return false;
+                    }
+                })
+                .map(csv -> {
+                    try {
+                        return objectMapper.readValue(csv.getData(), new TypeReference<Map<String, String>>() {});
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        return null;
+                    }
+                }).collect(Collectors.toList());
     }
 
     public void processCsv(MultipartFile file, String delimiter) throws IOException {

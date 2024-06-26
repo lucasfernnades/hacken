@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/csv")
@@ -16,6 +18,11 @@ public class CsvController {
     @Autowired
     public CsvController(CsvService csvService) {
         this.csvService = csvService;
+    }
+
+    @GetMapping("/search")
+    public List<Map<String, String>> search(@RequestParam String key, @RequestParam String value) {
+        return csvService.search(key, value);
     }
 
     @PostMapping("/upload")
